@@ -111,8 +111,9 @@ class EditMemeViewController: ViewController, UITextFieldDelegate {
     }
     
     func keyboardWillShow(_ notification:Notification) {
-        
-       view.frame.origin.y -= getKeyboardHeight(notification)
+        if(bottomText.isEditing){
+           view.frame.origin.y -= getKeyboardHeight(notification)
+        }
     //bottomText.frame.origin.y -= getKeyboardHeight(notification)
     }
     
@@ -130,10 +131,12 @@ class EditMemeViewController: ViewController, UITextFieldDelegate {
     }
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
+        if(textField == topText){
+            view.frame.origin.y = 0
+        }
         if((textField == topText && textField.text == DEFAULT_TOP_TEXT) || (textField == bottomText && textField.text == DEFAULT_BOTTOM_TEXT)){
             textField.text = EMPTY_TEXT
         }
-        
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
