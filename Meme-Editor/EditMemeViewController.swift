@@ -9,7 +9,21 @@
 import Foundation
 import UIKit
 
-class EditMemeViewController: ViewController, UITextFieldDelegate {
+class Meme{
+    var topText:String!
+    var bottomText:String!
+    var originalImage:UIImage!
+    var memedImage:UIImage!
+    
+    init(topText:String, bottomText:String, originalImage:UIImage, memedImage:UIImage) {
+        self.topText = topText
+        self.originalImage = originalImage
+        self.memedImage = memedImage
+        self.bottomText = bottomText
+    }
+}
+
+class EditMemeViewController: ViewController, UITextFieldDelegate, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
     
     @IBOutlet weak var imageView: UIImageView!
     var selectedImage:UIImage!
@@ -19,20 +33,18 @@ class EditMemeViewController: ViewController, UITextFieldDelegate {
     @IBOutlet weak var bottomText: UITextField!
     @IBOutlet weak var topText: UITextField!
     
-    let DEFAULT_TOP_TEXT = "ENTER TOP TEXT HERE"
-    let DEFAULT_BOTTOM_TEXT = "ENTER BOTTOM TEXT HERE"
-    let EMPTY_TEXT = ""
+    weak var memedImage: UIImage!
+    
+    let default_top_text = "ENTER TOP TEXT HERE"
+    let default_bottom_text = "ENTER BOTTOM TEXT HERE"
+    let empty_text = ""
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        cameraButton.isEnabled = false
-        albumButton.isEnabled = false
-        showSelectedImageInTheBack()
-        manageTextAttributes()
-        subscribeToKeyboardNotifications()
-        topText.delegate = self
-        bottomText.delegate = self
+        if(selectedImage==nil) {
+            showImagePicker()
+        }
+        manageTextFields()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -42,22 +54,43 @@ class EditMemeViewController: ViewController, UITextFieldDelegate {
     }
     
     override func viewDidLoad() {
-        topText.text = DEFAULT_TOP_TEXT
-        bottomText.text = DEFAULT_BOTTOM_TEXT
+        setDefaultValues()
+    }
+
+    
+    @IBAction func showCamera(_ sender: Any) {
+        launchImageController(source: .camera)
+    }
+    
+    @IBAction func showAlbum(_ sender: Any) {
+        launchImageController(source: .photoLibrary)
     }
     
     @IBAction func callShare(_ sender: Any) {
         let savedImage = generateMemedImage()
+        self.memedImage = savedImage
         let controller = UIActivityViewController(activityItems: [savedImage], applicationActivities: nil)
+        controller.completionWithItemsHandler = {
+            (activity, success, items, error) in
+            self.save()
+        }
         self.present(controller, animated: true, completion: nil)
     }
     
     @IBAction func cancelView(_ sender: Any) {
-        self.dismiss(animated: true, completion: nil)
+        setDefaultValues()
+        showImagePicker()
     }
     
     override var prefersStatusBarHidden: Bool {
         return true
+    }
+    
+    func setDefaultValues(){
+        imageView.image = nil
+        selectedImage = nil
+        topText.text = default_top_text
+        bottomText.text = default_bottom_text
     }
     
     func generateMemedImage() -> UIImage {
@@ -79,9 +112,10 @@ class EditMemeViewController: ViewController, UITextFieldDelegate {
     
     func manageTextAttributes(){
         let memeTextAttributes:[String:Any] = [
+            NSStrokeColorAttributeName: UIColor.black,
             NSForegroundColorAttributeName: UIColor.white,
-            NSStrokeColorAttributeName: UIColor.white,
-            NSFontAttributeName: UIFont(name: "Arial-BoldMT", size: 40)!]
+            NSFontAttributeName: UIFont(name: "Arial-BoldMT", size: 40)!,
+            NSStrokeWidthAttributeName : -4]
         topText.defaultTextAttributes = memeTextAttributes
         bottomText.defaultTextAttributes = memeTextAttributes
         topText.textAlignment = .center
@@ -114,7 +148,6 @@ class EditMemeViewController: ViewController, UITextFieldDelegate {
         if(bottomText.isEditing){
            view.frame.origin.y -= getKeyboardHeight(notification)
         }
-    //bottomText.frame.origin.y -= getKeyboardHeight(notification)
     }
     
     func keyboardWillHide(_ notification:Notification) {
@@ -134,8 +167,8 @@ class EditMemeViewController: ViewController, UITextFieldDelegate {
         if(textField == topText){
             view.frame.origin.y = 0
         }
-        if((textField == topText && textField.text == DEFAULT_TOP_TEXT) || (textField == bottomText && textField.text == DEFAULT_BOTTOM_TEXT)){
-            textField.text = EMPTY_TEXT
+        if((textField == topText && textField.text == default_top_text) || (textField == bottomText && textField.text == default_bottom_text)){
+            textField.text = empty_text
         }
     }
     
@@ -144,6 +177,51 @@ class EditMemeViewController: ViewController, UITextFieldDelegate {
         return true
     }
     
+    func launchImageController(source: UIImagePickerControllerSourceType){
+        let controller = UIImagePickerController()
+        controller.delegate = self
+        controller.sourceType = source
+        self.present(controller, animated: true, completion: nil)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+        let imageName = info[UIImagePickerControllerOriginalImage] as! UIImage
+        selectedImage = imageName
+        showTextEditor()
+        picker.dismiss(animated: true, completion: nil)
+    }
+    
+    func showImagePicker(){
+        ShareButton.isEnabled = false;
+        cancelButton.isEnabled = false;
+        cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
+        topText.isHidden = true
+        bottomText.isHidden = true
+        albumButton.isEnabled = true
+    }
+    
+    func showTextEditor(){
+        cameraButton.isEnabled = false
+        albumButton.isEnabled = false
+        self.topText.isHidden = false
+        self.bottomText.isHidden = false
+        self.cancelButton.isEnabled = true
+        self.ShareButton.isEnabled = true
+        showSelectedImageInTheBack()
+    }
+    
+    func manageTextFields(){
+        manageTextAttributes()
+        subscribeToKeyboardNotifications()
+        topText.delegate = self
+        bottomText.delegate = self
+    }
+    
+    func save() {
+        // Create the meme
+        let meme = Meme(topText: topText.text!, bottomText: bottomText.text!, originalImage: imageView.image!, memedImage: memedImage)
+    }
+
     
 }
 

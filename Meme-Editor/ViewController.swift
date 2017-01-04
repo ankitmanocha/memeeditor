@@ -16,6 +16,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var albumButton: UIBarButtonItem!
     
     @IBOutlet weak var ShareButton: UIBarButtonItem!
+    
+    @IBOutlet weak var cancelButton: UIBarButtonItem!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
