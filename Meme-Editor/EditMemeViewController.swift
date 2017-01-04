@@ -9,19 +9,6 @@
 import Foundation
 import UIKit
 
-class Meme{
-    var topText:String!
-    var bottomText:String!
-    var originalImage:UIImage!
-    var memedImage:UIImage!
-    
-    init(topText:String, bottomText:String, originalImage:UIImage, memedImage:UIImage) {
-        self.topText = topText
-        self.originalImage = originalImage
-        self.memedImage = memedImage
-        self.bottomText = bottomText
-    }
-}
 
 class EditMemeViewController: ViewController, UITextFieldDelegate, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
     
